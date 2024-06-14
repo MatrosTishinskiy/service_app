@@ -14,9 +14,17 @@ class SubscriptionSerializer(serializers.ModelSerializer):
     email = serializers.CharField(source='client.user.email')
     price = serializers.SerializerMethodField()
 
+    ## 1й вариант получения цены через расчет в сериализаторе ##
+    # def get_price(self, instance):
+    #     return (instance.service.full_price -
+    #             instance.service.full_price * (instance.plan.discount_percent / 100))
+
+    ## 2й вариант расчет цены в БД через annotate ##
     def get_price(self, instance):
-        return (instance.service.full_price -
-                instance.service.full_price * (instance.plan.discount_percent / 100))
+        return instance.price
+
+
+
 
     class Meta:
         model = Subscription
