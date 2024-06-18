@@ -21,8 +21,8 @@ class SubscriptionView(ReadOnlyModelViewSet):
         ##################################################################################################################
         Prefetch('client',
                  queryset=Client.objects.all().select_related('user').only('company_name', 'user__email'))
-    ).annotate(price=F('service__full_price') -
-                     F('service__full_price') * F('plan__discount_percent') / 100.00)
+    )#.annotate(price=F('service__full_price') -
+     #                F('service__full_price') * F('plan__discount_percent') / 100.00)
 
     serializer_class = SubscriptionSerializer
 

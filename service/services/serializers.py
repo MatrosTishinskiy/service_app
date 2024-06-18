@@ -12,7 +12,13 @@ class SubscriptionSerializer(serializers.ModelSerializer):
     plan = PlanSerializer()
     client_name = serializers.CharField(source='client.company_name')
     email = serializers.CharField(source='client.user.email')
+    '''
+    Поле было необходимо до создания аналогичного поля в модели!
+    
     price = serializers.SerializerMethodField()
+    
+    '''
+
 
     ## 1й вариант получения цены через расчет в сериализаторе ##
     # def get_price(self, instance):
@@ -20,8 +26,8 @@ class SubscriptionSerializer(serializers.ModelSerializer):
     #             instance.service.full_price * (instance.plan.discount_percent / 100))
 
     ## 2й вариант расчет цены в БД через annotate ##
-    def get_price(self, instance):
-        return instance.price
+    # def get_price(self, instance):
+    #     return instance.price
 
 
 
