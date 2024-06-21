@@ -1,12 +1,8 @@
 from django.core.validators import MaxValueValidator
 from django.db import models, transaction
-from django.db.models import F
 
 from clients.models import Client
-from services.tasks import set_price
-
-
-
+from services.tasks import set_price, set_comment
 
 
 class Service(models.Model):
@@ -21,12 +17,8 @@ class Service(models.Model):
         super().save(*args, **kwargs)
         if self.old_full_price != self.full_price:
             transaction.on_commit(
-                lambda: [set_price.delay(subscription.id)
+                lambda: [(set_price.delay(subscription.id), set_comment.delay(subscription.id))
                          for subscription in self.subscriptions.all()])
-
-
-
-
 
 
 class Plan(models.Model):
@@ -38,9 +30,10 @@ class Plan(models.Model):
 
     plan_type = models.CharField(choices=PLAN_TYPES, max_length=10)
     discount_percent = models.PositiveIntegerField(default=0,
-                                                        validators=[
-                                                            MaxValueValidator(100)
-                                                        ])
+                                                   validators=[
+                                                       MaxValueValidator(100)
+                                                   ])
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.old_discount_percent = self.discount_percent
@@ -49,12 +42,8 @@ class Plan(models.Model):
         super().save(*args, **kwargs)
         if self.old_discount_percent != self.discount_percent:
             transaction.on_commit(
-                lambda: [set_price.delay(subscription.id)
+                lambda: [(set_price.delay(subscription.id), set_comment.delay(subscription.id))
                          for subscription in self.subscriptions.all()])
-
-
-
-
 
 
 class Subscription(models.Model):
@@ -62,7 +51,7 @@ class Subscription(models.Model):
     service = models.ForeignKey(to=Service, related_name='subscriptions', on_delete=models.PROTECT)
     plan = models.ForeignKey(to=Plan, related_name='subscriptions', on_delete=models.PROTECT)
     price = models.PositiveIntegerField(default=0)
-
+    comment = models.CharField(max_length=50, default='')
 
     def save(self, *args, **kwargs):
         if not self.pk:
@@ -72,6 +61,3 @@ class Subscription(models.Model):
 
             self.price = start_price
         super().save(*args, **kwargs)
-
-
-
