@@ -5,6 +5,8 @@ from celery import shared_task
 from django.db.models import F
 from django.db import transaction
 from celery_singleton import Singleton
+from django.core.cache import cache
+from django.conf import settings
 
 
 '''
@@ -80,7 +82,7 @@ def set_price(subscription_id):
 
         subscription.price = subscription.annotated_price
         subscription.save()
-
+    cache.delete(settings.PRICE_CACHE_NAME)
 
 @shared_task#(base=Singleton) если применять Singleton (с тестами на 8ми подписках работает криво)
 def set_comment(subscription_id):
@@ -95,5 +97,6 @@ def set_comment(subscription_id):
 
         subscription.comment = str(datetime.datetime.now())
         subscription.save()
+    cache.delete(settings.PRICE_CACHE_NAME)
 
 
