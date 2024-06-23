@@ -36,6 +36,7 @@ from django.conf import settings
 #
 #     subscription.price = subscription.annotated_price
 #     subscription.save(update_fields=['price'])
+#     cache.delete(settings.PRICE_CACHE_NAME)
 #
 #
 # @shared_task#(base=Singleton) если применять Singleton
@@ -49,7 +50,7 @@ from django.conf import settings
 #
 #     subscription.comment = str(datetime.datetime.now())
 #     subscription.save(update_fields=['comment'])
-
+#     cache.delete(settings.PRICE_CACHE_NAME)
 
 '''
 Более сложное решение применимое для больших тасок 

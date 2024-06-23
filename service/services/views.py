@@ -17,10 +17,10 @@ class SubscriptionView(ReadOnlyModelViewSet):
 
     queryset = Subscription.objects.all().prefetch_related(
         'plan',
-        ##################################################################################################################
+        ##################################################################################################
         ## 1й вариант при расчете цены в get_price SubscriptionSerializer  ##
         # 'service',
-        ##################################################################################################################
+        ##################################################################################################
         Prefetch('client',
                  queryset=Client.objects.all().select_related('user').only('company_name', 'user__email'))
     )#.annotate(price=F('service__full_price') -

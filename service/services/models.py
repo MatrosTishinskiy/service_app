@@ -1,9 +1,15 @@
 from django.core.validators import MaxValueValidator
 from django.db import models, transaction
+from django.core.cache import cache
+from django.conf import settings
+from django.db.models.signals import post_delete
+
+import datetime
+
 
 from clients.models import Client
 from services.tasks import set_price, set_comment
-
+from services.receivers import delete_cache_total_amount
 
 class Service(models.Model):
     name = models.CharField(max_length=50)
@@ -12,6 +18,7 @@ class Service(models.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.old_full_price = self.full_price
+
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -38,6 +45,7 @@ class Plan(models.Model):
         super().__init__(*args, **kwargs)
         self.old_discount_percent = self.discount_percent
 
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         if self.old_discount_percent != self.discount_percent:
@@ -53,11 +61,25 @@ class Subscription(models.Model):
     price = models.PositiveIntegerField(default=0)
     comment = models.CharField(max_length=50, default='')
 
+
+
     def save(self, *args, **kwargs):
-        if not self.pk:
+        # create = not bool(self.id)
+        # super().save(*args, **kwargs)
+        #
+        # if create:
+        #     set_price.delay(self.id)
+
+
+        if not self.pk:  ###Самопальный вариант. Не делает 2х лишних запросов в БД###
             start_price = (self.service.full_price -
                            self.service.full_price *
                            self.plan.discount_percent / 100)
 
             self.price = start_price
+            self.comment = str(datetime.datetime.now())
+            cache.delete(settings.PRICE_CACHE_NAME)
         super().save(*args, **kwargs)
+
+
+post_delete.connect(delete_cache_total_amount, sender=Subscription)
